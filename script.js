@@ -275,7 +275,57 @@ document.addEventListener('DOMContentLoaded', () => {
     sendCustomWaBtn.addEventListener('click', () => {
       const text = customTextarea.value.trim() || 'Olá! Vi o site do seu Tiggo 8 23/24 Max Drive (R$ 139.900,00) e gostaria de mais informações.';
       const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+      trackEvent('click_whatsapp', { button_location: 'concierge_custom_message' });
       window.open(url, '_blank', 'noopener,noreferrer');
     });
   }
+
+  // 8. Analytics & Clarity Event Tracking Helper
+  function trackEvent(eventName, params = {}) {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', eventName, params);
+    }
+    if (typeof window.clarity === 'function') {
+      window.clarity('event', eventName);
+    }
+  }
+
+  // Track all direct WhatsApp links
+  document.querySelectorAll('a[href*="wa.me"]').forEach((link) => {
+    link.addEventListener('click', () => {
+      let location = 'link_whatsapp';
+      if (link.classList.contains('btn-header-wa')) location = 'header_or_dossier';
+      else if (link.classList.contains('floating-wa-pill')) location = 'floating_button';
+      else if (link.closest('.hero-price-pedestal')) location = 'hero_pedestal';
+      else if (link.closest('.concierge-left')) location = 'concierge_direct';
+      trackEvent('click_whatsapp', { button_location: location });
+    });
+  });
+
+  // Track walkaround video play
+  const walkaroundVideo = document.querySelector('video');
+  if (walkaroundVideo) {
+    walkaroundVideo.addEventListener('play', () => {
+      trackEvent('play_video_tiggo8', { media_type: 'walkaround_mp4' });
+    }, { once: true });
+  }
+
+  // Track gallery photo lightbox views
+  galleryItems.forEach((item) => {
+    item.addEventListener('click', () => {
+      const titleEl = item.querySelector('.gallery-item-title');
+      trackEvent('view_gallery_photo', {
+        photo_title: titleEl ? titleEl.textContent.trim() : 'foto'
+      });
+    });
+  });
+
+  // Track technical specification tab clicks
+  specTabBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      trackEvent('view_specs_tab', {
+        tab_name: btn.textContent.trim()
+      });
+    });
+  });
 });
